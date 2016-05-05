@@ -15,13 +15,17 @@ public class ClientSender extends Thread
     private ClientInfo mClientInfo;
     private PrintWriter mOut;
     private String message;
+    String receiverPort;
+    String receiverIP;
     //
     // private Database db;
     //
 
-    public ClientSender(ClientInfo aClientInfo, String message)
+    public ClientSender(ClientInfo aClientInfo, String message, String mreceiverIP, String mreceiverPort)
             throws IOException
     {
+        receiverIP = mreceiverIP;
+        receiverPort = mreceiverPort;
         mClientInfo = aClientInfo;
         this.message=message;
         //mServerDispatcher = aServerDispatcher;
@@ -36,8 +40,8 @@ public class ClientSender extends Thread
      */
     public synchronized void sendMessage(String aMessage)
     {
-        messageQueue.add(aMessage);
-        notify();
+        //messageQueue.add(aMessage);
+        //notify();
     }
 
     /**
@@ -96,7 +100,7 @@ public class ClientSender extends Thread
             // Communication problem
         }
         // Communication is broken. Interrupt both listener and sender threads
-        mClientInfo.mClientListener.interrupt();
+        //mClientInfo.mClientListener.interrupt();
         // mServerDispatcher.deleteClient(mClientInfo);
     }
 

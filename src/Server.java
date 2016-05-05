@@ -10,6 +10,8 @@ import java.io.*;
 public class Server {
 
     public static final int port = 9002;
+    public static String receiverPort;
+    public static String receiverIP;
 
     public static void main(String[] args) {
         ServerSocket serverSocket = null;
@@ -22,8 +24,8 @@ public class Server {
             System.exit(-1);
         }
 
-        ServerDispatcher serverDispatcher = new ServerDispatcher();
-        serverDispatcher.start();
+        //ServerDispatcher serverDispatcher = new ServerDispatcher();
+        //serverDispatcher.start();
 
         while (true) {
             try {
@@ -34,16 +36,20 @@ public class Server {
                         + ":" + socket.getPort());
                 ClientInfo clientInfo = new ClientInfo();
                 clientInfo.mSocket = socket;
+
                 ClientListener clientListener =
-                        new ClientListener(clientInfo);
-                String message = "message";
-                ClientSender clientSender =
-                        new ClientSender(clientInfo, message);
-                clientInfo.mClientListener = clientListener;
-                clientInfo.mClientSender = clientSender;
+                        new ClientListener(clientInfo, receiverIP, receiverPort);
                 clientListener.start();
-                clientSender.start();
-                serverDispatcher.addClient(clientInfo);
+
+                if(clientListener.receiver){
+                    receiverPort = clientListener.receiverPort;
+                    receiverIP = clientListener.receiverIP;
+                    clientListener.interrupt();
+                   // serverDispatcher.addClient(clientInfo);
+
+                }
+
+
             } catch (IOException ioe) {
                 ioe.printStackTrace();
             }

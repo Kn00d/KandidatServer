@@ -4,6 +4,7 @@ import java.security.spec.*;
 
 import javax.crypto.*;
 import javax.crypto.spec.*;
+import org.apache.commons.io.FileUtils;
 
 /**
  * Utility class for encrypting/decrypting files.
@@ -13,6 +14,7 @@ public class FileEncryption {
 
     public static final int AES_Key_Size = 256;
 
+    FileUtils fileUtils;
     Cipher pkCipher, aesCipher;
     byte[] aesKey;
     SecretKeySpec aeskeySpec;
@@ -36,6 +38,16 @@ public class FileEncryption {
         SecretKey key = kgen.generateKey();
         aesKey = key.getEncoded();
         aeskeySpec = new SecretKeySpec(aesKey, "AES");
+    }
+
+    public String getJsonString (File message) {
+        try{
+            String jsonMessage = fileUtils.readFileToString(message);
+            return jsonMessage;
+        }catch (IOException i){
+            i.printStackTrace();
+        }
+        return null;
     }
 
     /**

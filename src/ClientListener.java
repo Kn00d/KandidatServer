@@ -7,6 +7,7 @@ import java.net.*;
 import java.security.GeneralSecurityException;
 
 import com.google.gson.*;
+import sun.rmi.runtime.Log;
 
 
 public class ClientListener extends Thread {
@@ -15,12 +16,23 @@ public class ClientListener extends Thread {
     private BufferedReader mIn;
     private String query;
     private String action;
+    File encrypted;
+    File decrypted;
+    File encryptedAesKeyMix;
+    File rsaPrivateKeyMix;
+    FileEncryption encryption;
+    Socket socket;
+    Boolean receiver;
+    String receiverIP;
+    String receiverPort;
 
-    public ClientListener(ClientInfo aClientInfo)
+    public ClientListener(ClientInfo aClientInfo, String mreceiverIP, String mreceiverPort)
             throws IOException {
         mClientInfo = aClientInfo;
-        // mServerDispatcher = aServerDispatcher;
-        Socket socket = aClientInfo.mSocket;
+        receiverIP = mreceiverIP;
+        receiverPort = mreceiverPort;
+        //mServerDispatcher = aServerDispatcher;
+        socket = aClientInfo.mSocket;
         mIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
     }
 
@@ -37,51 +49,72 @@ public class ClientListener extends Thread {
                     break;
                 }
                 processMessage(jsonString);
-                mServerDispatcher.dispatchMessage(mClientInfo, query, action);
+                //mServerDispatcher.dispatchMessage(mClientInfo, query, action);
             }
         } catch (IOException ioex) {
             // Problem reading from socket (communication is broken)
         }
 
         // Communication is broken. Interrupt both listener and sender threads
-        mClientInfo.mClientListener.interrupt();
-        mClientInfo.mClientSender.interrupt();
-        mServerDispatcher.deleteClient(mClientInfo);
+        //mClientInfo.mClientListener.interrupt();
+        //mClientInfo.mClientSender.interrupt();
+        //mServerDispatcher.deleteClient(mClientInfo);
 
     }
 
     private void processMessage(String jsonMessage) {
-        decrypt (encrypted1, decrypted);
         JsonParser parser = new JsonParser();
         JsonObject jo = (JsonObject) parser.parse(jsonMessage);
         String activity = jo.get("activity").getAsString().toLowerCase();
 //        System.out.println(jsonMessage);
         if (activity.equalsIgnoreCase("vote")) {
+            encrypted = new File("/srvakf/KandidatServer/", "encrypted1.txt");
+            decrypted = new File("/srvakf/KandidatServer/", "decrypted1.txt");
+            encryptedAesKeyMix = new File("/srvakf/KandidatServer/", "encryptedAesKeyMix.txt");
+            rsaPrivateKeyMix = new File("/srvakf/KandidatServer/", "privateSender.der");
+            receiver = false;
             String message;
-            String address;
-            String encryptedMessage = jo.get("message").toString();
 
-            JsonArray data = (JsonArray) jo.get("data");
+            String encryptedAesKey = jo.get("aeskey").toString();
+            try{
+            BufferedWriter writer = new BufferedWriter(new FileWriter(encryptedAesKeyMix, false /*append*/));
+            writer.write(encryptedAesKey);
+            writer.close();
+            encryption.loadKey(encryptedAesKeyMix, rsaPrivateKeyMix);
+                String encryptedMessage = jo.get("message").toString();
+                writer = new BufferedWriter(new FileWriter(encrypted, false /*append*/));
+                writer.write(encryptedMessage);
+                writer.close();
+            encryption.decrypt(encrypted, decrypted);
+                jsonMessage = encryption.getJsonString(decrypted).replace("RANDOM_SALT", "");
+                ClientSender clientSender =
+                        new ClientSender(mClientInfo, jsonMessage, receiverIP, receiverPort);
+                clientSender.start();
+
+
+
+        } catch (IOException i){
+            i.printStackTrace();
+        } catch (GeneralSecurityException e){
+                e.printStackTrace();
+            }
+
+            /*JsonArray data = (JsonArray) jo.get("data");
             message = data.get(0).getAsString();
             address = data.get(1).getAsString();
             System.out.println(message);
-            System.out.println(address);
+            System.out.println(address);*/
+        }
 
+        if (activity.equalsIgnoreCase("receive")){
+            receiver = true;
+            receiverIP = socket.getInetAddress().getHostAddress();
+            receiverPort = "" + socket.getPort();
         }
     }
 
-
-
-    File encrypted1 = new File("encrypted1.txt");
-    File decrypted = new File ("Decrypted.txt");
-    File encryptedAesKey = new File("encryptedAesKey.txt");
-    File rsaPrivateKey = new File("private.der");
-    FileEncryption encryption;
-
-
     public void decrypt (File in, File out){
         try {
-            encryption.loadKey(encryptedAesKey, rsaPrivateKey);
 
             encryption.decrypt(in, out);
         } catch (IOException i){
