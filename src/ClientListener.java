@@ -7,6 +7,7 @@ import java.net.*;
 import java.security.GeneralSecurityException;
 
 import com.google.gson.*;
+import org.apache.commons.io.FileUtils;
 import sun.rmi.runtime.Log;
 
 
@@ -23,6 +24,7 @@ public class ClientListener extends Thread {
     String receiverIP;
     int receiverPort;
     VoteReceiver votereceiver;
+    FileUtils fileUtils;
 
     public ClientListener(ClientInfo aClientInfo, VoteReceiver voteReceiver)
             throws IOException {
@@ -69,8 +71,9 @@ public class ClientListener extends Thread {
 
     }
 
-    private void processMessage(String jsonMessage) {
-        System.out.println(jsonMessage);
+    private void processMessage(String jsonMessage){
+        fileUtils = new FileUtils();
+        System.out.println("JSONMESSAGE: "+jsonMessage);
         String [] parts = jsonMessage.split("\"?,?\"[a-z]*\":\"");
         //JsonParser parser = new JsonParser();
         //JsonObject jo = (JsonObject) parser.parse(jsonMessage);
@@ -79,18 +82,20 @@ public class ClientListener extends Thread {
         System.out.println(activity);
 
         if (activity.equalsIgnoreCase("vote")) {
-            encrypted = new File("/srvakf/KandidatServer/", "encrypted1.txt");
-            decrypted = new File("/srvakf/KandidatServer/", "decrypted1.txt");
-            encryptedAesKeyMix = new File("/srvakf/KandidatServer/", "encryptedAesKeyMix.txt");
-            rsaPrivateKeyMix = new File("/srvakf/KandidatServer/", "privateSender.der");
+            encrypted = new File("/srvakf/KandidatServer/encrypted1.txt");
+            decrypted = new File("/srvakf/KandidatServer/decrypted1.txt");
+            encryptedAesKeyMix = new File("/srvakf/KandidatServer/encryptedAesKeyMix.txt");
+            rsaPrivateKeyMix = new File("/srvakf/KandidatServer/privateSender.der");
             //String encryptedAesKey = jo.get("aeskey").toString();
             String encryptedAesKey = parts [3].replace("\"}","");
-            System.out.println(encryptedAesKey);
+            System.out.println("AESKEY: "+encryptedAesKey);
 
             try{
+                encryption = new FileEncryption();
             BufferedWriter writer = new BufferedWriter(new FileWriter(encryptedAesKeyMix, false /*append*/));
             writer.write(encryptedAesKey);
             writer.close();
+                System.out.println("AESKEY: "+fileUtils.readFileToString(encryptedAesKeyMix));
             encryption.loadKey(encryptedAesKeyMix, rsaPrivateKeyMix);
                 //String encryptedMessage = jo.get("message").toString();
                 String encryptedMessage = parts [2];
