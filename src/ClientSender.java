@@ -5,7 +5,6 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-//import Database.Database;
 import com.google.gson.JsonArray;
 
 public class ClientSender extends Thread

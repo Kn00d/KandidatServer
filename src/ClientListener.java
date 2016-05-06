@@ -44,7 +44,9 @@ public class ClientListener extends Thread {
                 StringBuilder jsonString = new StringBuilder();
                 while ((next = mIn.readLine()) != null) {
                     jsonString.append(next);
-                    if (jsonString.toString().endsWith("\"}")){
+                    System.out.println(jsonString.toString());
+                    if (jsonString.toString().contains("\"}")){
+                        System.out.println("HEJ");
                         break;
                     }
 
@@ -66,7 +68,7 @@ public class ClientListener extends Thread {
 
     }
 
-    private void processMessage(String jsonMessage) {
+    private void processMessage(String jsonMessage){
         System.out.println(jsonMessage);
         String [] parts = jsonMessage.split("\"?,?\"[a-z]*\":\"");
         //JsonParser parser = new JsonParser();
@@ -76,15 +78,17 @@ public class ClientListener extends Thread {
         System.out.println(activity);
 
         if (activity.equalsIgnoreCase("vote")) {
-            encrypted = new File("/srvakf/KandidatServer/", "encrypted1.txt");
-            decrypted = new File("/srvakf/KandidatServer/", "decrypted1.txt");
-            encryptedAesKeyMix = new File("/srvakf/KandidatServer/", "encryptedAesKeyMix.txt");
-            rsaPrivateKeyMix = new File("/srvakf/KandidatServer/", "privateSender.der");
+            encrypted = new File("/srvakf/KandidatServer/encrypted1.txt");
+            decrypted = new File("/srvakf/KandidatServer/decrypted1.txt");
+            encryptedAesKeyMix = new File("/srvakf/KandidatServer/encryptedAesKeyMix.txt");
+            rsaPrivateKeyMix = new File("/srvakf/KandidatServer/privateSender.der");
             //String encryptedAesKey = jo.get("aeskey").toString();
             String encryptedAesKey = parts [3].replace("\"}","");
             System.out.println(encryptedAesKey);
 
             try{
+                encryption = new FileEncryption();
+                encryption.makeKey();
             BufferedWriter writer = new BufferedWriter(new FileWriter(encryptedAesKeyMix, false /*append*/));
             writer.write(encryptedAesKey);
             writer.close();
