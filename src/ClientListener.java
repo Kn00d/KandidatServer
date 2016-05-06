@@ -59,9 +59,12 @@ public class ClientListener extends Thread {
     }
 
     private void processMessage(String jsonMessage) {
-        JsonParser parser = new JsonParser();
-        JsonObject jo = (JsonObject) parser.parse(jsonMessage);
-        String activity = jo.get("activity").getAsString().toLowerCase();
+        System.out.println(jsonMessage);
+        String [] parts = jsonMessage.split("\"?,?\"[a-z]*\":\"");
+        //JsonParser parser = new JsonParser();
+        //JsonObject jo = (JsonObject) parser.parse(jsonMessage);
+        String activity = parts [1];
+        //String activity = jo.get("activity").getAsString().toLowerCase();
         System.out.println(activity);
 
         if (activity.equalsIgnoreCase("vote")) {
@@ -69,14 +72,18 @@ public class ClientListener extends Thread {
             decrypted = new File("/srvakf/KandidatServer/", "decrypted1.txt");
             encryptedAesKeyMix = new File("/srvakf/KandidatServer/", "encryptedAesKeyMix.txt");
             rsaPrivateKeyMix = new File("/srvakf/KandidatServer/", "privateSender.der");
-            String encryptedAesKey = jo.get("aeskey").toString();
+            //String encryptedAesKey = jo.get("aeskey").toString();
+            String encryptedAesKey = parts [3].replace("\"}","");
+            System.out.println(encryptedAesKey);
 
             try{
             BufferedWriter writer = new BufferedWriter(new FileWriter(encryptedAesKeyMix, false /*append*/));
             writer.write(encryptedAesKey);
             writer.close();
             encryption.loadKey(encryptedAesKeyMix, rsaPrivateKeyMix);
-                String encryptedMessage = jo.get("message").toString();
+                //String encryptedMessage = jo.get("message").toString();
+                String encryptedMessage = parts [2];
+                System.out.println(encryptedMessage);
                 writer = new BufferedWriter(new FileWriter(encrypted, false /*append*/));
                 writer.write(encryptedMessage);
                 writer.close();
