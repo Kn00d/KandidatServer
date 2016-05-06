@@ -23,6 +23,7 @@ public class Server {
             e.printStackTrace();
             System.exit(-1);
         }
+        VoteReceiver voteReceiver = new VoteReceiver();
 
         //ServerDispatcher serverDispatcher = new ServerDispatcher();
         //serverDispatcher.start();
@@ -38,16 +39,8 @@ public class Server {
                 clientInfo.mSocket = socket;
 
                 ClientListener clientListener =
-                        new ClientListener(clientInfo, receiverIP, receiverPort);
+                        new ClientListener(clientInfo, voteReceiver);
                 clientListener.start();
-
-                if(clientListener.receiver){
-                    receiverPort = clientListener.receiverPort;
-                    receiverIP = clientListener.receiverIP;
-                    clientListener.interrupt();
-                   // serverDispatcher.addClient(clientInfo);
-
-                }
 
 
             } catch (IOException ioe) {

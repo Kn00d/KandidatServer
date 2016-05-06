@@ -11,29 +11,25 @@ import sun.rmi.runtime.Log;
 
 
 public class ClientListener extends Thread {
-    private ServerDispatcher mServerDispatcher;
     private ClientInfo mClientInfo;
     private BufferedReader mIn;
-    private String query;
-    private String action;
     File encrypted;
     File decrypted;
     File encryptedAesKeyMix;
     File rsaPrivateKeyMix;
     FileEncryption encryption;
     Socket socket;
-    Boolean receiver;
     String receiverIP;
-    String receiverPort;
+    int receiverPort;
+    VoteReceiver votereceiver;
 
-    public ClientListener(ClientInfo aClientInfo, String mreceiverIP, String mreceiverPort)
+    public ClientListener(ClientInfo aClientInfo, VoteReceiver voteReceiver)
             throws IOException {
         mClientInfo = aClientInfo;
-        receiverIP = mreceiverIP;
-        receiverPort = mreceiverPort;
         //mServerDispatcher = aServerDispatcher;
         socket = aClientInfo.mSocket;
         mIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        this.votereceiver = voteReceiver;
     }
 
     /**
@@ -66,16 +62,15 @@ public class ClientListener extends Thread {
         JsonParser parser = new JsonParser();
         JsonObject jo = (JsonObject) parser.parse(jsonMessage);
         String activity = jo.get("activity").getAsString().toLowerCase();
-//        System.out.println(jsonMessage);
+        System.out.println(activity);
+
         if (activity.equalsIgnoreCase("vote")) {
             encrypted = new File("/srvakf/KandidatServer/", "encrypted1.txt");
             decrypted = new File("/srvakf/KandidatServer/", "decrypted1.txt");
             encryptedAesKeyMix = new File("/srvakf/KandidatServer/", "encryptedAesKeyMix.txt");
             rsaPrivateKeyMix = new File("/srvakf/KandidatServer/", "privateSender.der");
-            receiver = false;
-            String message;
-
             String encryptedAesKey = jo.get("aeskey").toString();
+
             try{
             BufferedWriter writer = new BufferedWriter(new FileWriter(encryptedAesKeyMix, false /*append*/));
             writer.write(encryptedAesKey);
@@ -87,6 +82,11 @@ public class ClientListener extends Thread {
                 writer.close();
             encryption.decrypt(encrypted, decrypted);
                 jsonMessage = encryption.getJsonString(decrypted).replace("RANDOM_SALT", "");
+                receiverIP = votereceiver.getReceiverIP();
+                receiverPort = votereceiver.getReceiverPort();
+                System.out.println(jsonMessage);
+                System.out.println(receiverIP);
+                System.out.println(receiverPort);
                 ClientSender clientSender =
                         new ClientSender(mClientInfo, jsonMessage, receiverIP, receiverPort);
                 clientSender.start();
@@ -98,18 +98,15 @@ public class ClientListener extends Thread {
         } catch (GeneralSecurityException e){
                 e.printStackTrace();
             }
-
-            /*JsonArray data = (JsonArray) jo.get("data");
-            message = data.get(0).getAsString();
-            address = data.get(1).getAsString();
-            System.out.println(message);
-            System.out.println(address);*/
         }
 
         if (activity.equalsIgnoreCase("receive")){
-            receiver = true;
             receiverIP = socket.getInetAddress().getHostAddress();
-            receiverPort = "" + socket.getPort();
+            receiverPort = socket.getPort();
+            System.out.println(receiverIP);
+            System.out.println(receiverPort);
+            votereceiver.setReceiverIP(receiverIP);
+            votereceiver.setReceiverPort(receiverPort);
         }
     }
 

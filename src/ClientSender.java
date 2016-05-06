@@ -15,21 +15,23 @@ public class ClientSender extends Thread
     private ClientInfo mClientInfo;
     private PrintWriter mOut;
     private String message;
-    String receiverPort;
+    int receiverPort;
     String receiverIP;
+    Socket socket;
     //
     // private Database db;
     //
 
-    public ClientSender(ClientInfo aClientInfo, String message, String mreceiverIP, String mreceiverPort)
+    public ClientSender(ClientInfo aClientInfo, String message, String mreceiverIP, int mreceiverPort)
             throws IOException
     {
         receiverIP = mreceiverIP;
         receiverPort = mreceiverPort;
         mClientInfo = aClientInfo;
         this.message=message;
+        socket = new Socket (receiverIP, receiverPort);
         //mServerDispatcher = aServerDispatcher;
-        Socket socket = aClientInfo.mSocket;
+
         mOut = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
     }
 
@@ -67,6 +69,7 @@ public class ClientSender extends Thread
     {
         mOut.println(aMessage);
         mOut.flush();
+        message = "";
     }
 
     /**
@@ -81,21 +84,6 @@ public class ClientSender extends Thread
             //while (!isInterrupted()) {
             //String message = getNextMessageFromQueue();
             sendMessageToClient(message);
-            /**
-             * DATABASKOD
-             */
-            /*if(mServerDispatcher.action.equalsIgnoreCase("update")){
-               jsonArray = db.selectData(message);
-                sendJSON(jsonArray);
-            } else if(mServerDispatcher.action.equalsIgnoreCase("delete")){
-                db.updateData(message);
-            }else if (mServerDispatcher.action.equalsIgnoreCase("add")){
-                db.updateData(message);
-            } else {
-
-                System.out.println(mClientInfo.mSocket.getInetAddress() + " : "+mClientInfo.mSocket.getPort()+ " sent request: " + message);
-            }*/
-            //}
         } catch (Exception e) {
             // Communication problem
         }
