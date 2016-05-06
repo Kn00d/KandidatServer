@@ -13,6 +13,7 @@ import sun.rmi.runtime.Log;
 public class ClientListener extends Thread {
     private ClientInfo mClientInfo;
     private BufferedReader mIn;
+    private InputStreamReader isr;
     File encrypted;
     File decrypted;
     File encryptedAesKeyMix;
@@ -28,7 +29,9 @@ public class ClientListener extends Thread {
         mClientInfo = aClientInfo;
         //mServerDispatcher = aServerDispatcher;
         socket = aClientInfo.mSocket;
-        mIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        BufferedInputStream bis = new BufferedInputStream(socket.getInputStream());
+        mIn = new BufferedReader(new InputStreamReader(bis, "UTF-16"));
+        //isr = new InputStreamReader(bis, "US-ASCII");
         this.votereceiver = voteReceiver;
     }
 
