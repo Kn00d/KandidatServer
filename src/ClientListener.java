@@ -4,6 +4,7 @@
 
 import java.io.*;
 import java.net.*;
+import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 
 import com.google.gson.*;
@@ -25,6 +26,8 @@ public class ClientListener extends Thread {
     int receiverPort;
     VoteReceiver votereceiver;
     FileUtils fileUtils;
+    DataInputStream dIn;
+    byte[] message;
 
     public ClientListener(ClientInfo aClientInfo, VoteReceiver voteReceiver)
             throws IOException {
@@ -46,14 +49,23 @@ public class ClientListener extends Thread {
             while (!isInterrupted()) {
 
                 String next;
-                StringBuilder jsonString = new StringBuilder();
-                while ((next = mIn.readLine()) != null) {
+                //StringBuilder jsonString = new StringBuilder();
+                dIn = new DataInputStream(socket.getInputStream());
+
+                int length = dIn.readInt();                    // read length of incoming message
+                if(length>0) {
+                    message = new byte[length];
+                    dIn.readFully(message, 0, message.length); // read the message
+                }
+                /*while ((next = mIn.readLine()) != null) {
                     jsonString.append(next);
                     if (jsonString.toString().endsWith("\"}")){
                         break;
                     }
 
-                }
+                }*/
+                String jsonString = new String(message, Charset.forName("UTF-8"));
+                System.out.println(jsonString);
                 if (jsonString == null) {
                     break;
                 }
