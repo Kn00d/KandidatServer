@@ -40,11 +40,15 @@ public class ClientListener extends Thread {
         try {
             while (!isInterrupted()) {
 
-                String jsonString = mIn.readLine();
+                String next;
+                StringBuilder jsonString = new StringBuilder();
+                while ((next = mIn.readLine()) != null) {
+                    jsonString.append(next);
+                }
                 if (jsonString == null) {
                     break;
                 }
-                processMessage(jsonString);
+                processMessage(jsonString.toString());
                 //mServerDispatcher.dispatchMessage(mClientInfo, query, action);
             }
         } catch (IOException ioex) {
