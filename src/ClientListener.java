@@ -44,6 +44,10 @@ public class ClientListener extends Thread {
                 StringBuilder jsonString = new StringBuilder();
                 while ((next = mIn.readLine()) != null) {
                     jsonString.append(next);
+                    if (jsonString.toString().endsWith("\"}")){
+                        break;
+                    }
+
                 }
                 if (jsonString == null) {
                     break;
